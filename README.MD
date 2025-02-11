@@ -14,13 +14,13 @@ project allows for a high level of flexibity and different configurations.
 1. [Overview](#overview)
 2. [File Structure](#file-structure)
 3. [Module-by-Module Description](#module-by-module-description)
-    - [config.py](#configpy)
-    - [model.py](#modelpy)
-    - [dataset.py](#datasetpy)
-    - [candidate_ranking.py](#candidate_rankingpy)
-    - [utils.py](#utilspy)
-    - [train.py](#trainpy)
-    - [predictor.py](#predictorpy)
+    - config.py
+    - model.py
+    - dataset.py
+    - candidate_ranking.py
+    - utils.py
+    - train.py
+    - predictor.py
 4. [Setup and Usage](#setup-and-usage)
 
 ---
