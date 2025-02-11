@@ -1,6 +1,9 @@
 # Product Matching Deep Learning Pipeline Documentation
 
-This project implements a deep learning pipeline for product matching. It is designed to compare product names and seller item names—and to incorporate price differences—to determine if two products match. The project uses a recurrent neural network (RNN) architecture (with options for LSTM, GRU, or vanilla RNN) to encode text at the character level, and then combines the resulting representations with a price similarity factor to produce a final matching score.
+This project implements a deep learning pipeline for product matching. It is designed to compare product names and seller item names—and to incorporate price 
+differences—to determine if two products match. The project uses a recurrent neural network (RNN) architecture (with options for LSTM, GRU, or vanilla RNN) 
+to encode text at the character level, and then combines the resulting representations with a price similarity factor to produce a final matching score. The 
+project allows for a high level of flexibity and different configurations.
 
 > **_Note:_** The model architecture is inspired by [DeezyMatch: A Flexible Deep Learning Approach to Fuzzy String Matching](https://aclanthology.org/2020.emnlp-demos.9/) paper.
 
@@ -127,6 +130,7 @@ iSUPPLY
 ### Training the Model
 
 1. **Prepare Your Data:**  
+   - Use `utils.excel_to_csv_pipeline()` to turn you excell file to csv file (like in `preprocess_data.ipynb`).
    - Ensure that the training data CSV is available at the path specified by `config.TRAIN_DATA`.
    - The CSV should contain the following columns:  
      - `sku`  
