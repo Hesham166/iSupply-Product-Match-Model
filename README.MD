@@ -14,13 +14,6 @@ project allows for a high level of flexibity and different configurations.
 1. [Overview](#overview)
 2. [File Structure](#file-structure)
 3. [Module-by-Module Description](#module-by-module-description)
-    - config.py
-    - model.py
-    - dataset.py
-    - candidate_ranking.py
-    - utils.py
-    - train.py
-    - predictor.py
 4. [Setup and Usage](#setup-and-usage)
 
 ---
@@ -59,13 +52,13 @@ iSUPPLY
 ├── checkpoints                     # Contains training vocab.pkl and training checkpoints created after every epoch.
 ├── proprocessing.ipynb             # A notebook that demonstrates how to preprocess xlsx file to csv file.
 |── test.ipynb                      # A notebook that shows how to use the model.
-└── validation_output.xlsx          # The output of the model after using it on validation dataset.
+└── validation_output.xlsx          # Model output on validation dataset.
 
 ```
 
 ---
 
-## Modules Description
+## Module-by-Module Description
 
 - **config.py**  
   Global settings including device selection, hyperparameters, data paths, and training parameters.
@@ -155,6 +148,31 @@ iSUPPLY
 ### Performing Inference
 
 > **_Note:_** You must be in the project root directory for this to work (see `test.ipynb`).
+
+To make prediction from XLSX file, use `predict_from_excel()` function. For example:
+
+```python
+from src.predictor import Predictor
+p = Predictor()
+
+output_df = p.predict_from_excel(
+    master_xlsx_path='./data/raw/Product Matching Dataset.xlsx',
+    test_xlsx_path='./data/preprocessed/validation_dataset.xlsx',
+    output_xlsx_path='./validation_output.xlsx',
+    master_sheet='Master File',
+    test_sheet="validation_data",
+    output_sheet_name="validation_output",
+    query_names_column='seller_item_name',
+    query_prices_column='price',
+    master_candidate_names_column='product_name_ar',
+    master_prices_column='price',
+    k=3
+)
+```
+
+This function creates `validation_output.xlsx` file that contains the top `k` similar candidates with their `sku` and similarity score, `sim`. The function returns pandas DataFrame.
+
+Or you can use the model to make manual predictions.
 
 1. **Load the Predictor:**  
    In your inference script or interactive session, import and instantiate the Predictor class:

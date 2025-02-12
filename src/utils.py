@@ -3,6 +3,7 @@ import logging
 import torch
 import re
 import pandas as pd
+from openpyxl import load_workbook
 
 
 def setup_logging(log_file=None, level=logging.INFO):
@@ -112,23 +113,49 @@ def add_top_k_scores_to_df(valid_df, scores, master_file_df, k=3):
 
 def save_dataframe_to_xlsx(df, file_path, sheet_name="Sheet1"):
     """
-    Saves a Pandas DataFrame to an Excel (.xlsx) file.
-
+    Saves or appends a Pandas DataFrame to an Excel (.xlsx) file.
+    
+    If the file already exists, it appends (or replaces the specified sheet)
+    without affecting the other sheets. If the file does not exist, a new file is created.
+    
     Args:
         df (pd.DataFrame): The DataFrame to save.
         file_path (str): The file path where the Excel file should be saved.
         sheet_name (str): The sheet name in the Excel file. Default is "Sheet1".
-
+        
     Returns:
         None
     """
-    # Ensure the directory exists
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+    if os.path.exists(file_path):
+        try:
+            book = load_workbook(file_path)
+            writer = pd.ExcelWriter(file_path, engine='openpyxl')
+            writer.book = book
+            
+            # If the sheet already exists, remove it to replace with the new one
+            if sheet_name in book.sheetnames:
+                print(f"Sheet '{sheet_name}' already exists and will be replaced.")
+                std = book[sheet_name]
+                book.remove(std)
+            
+            writer.sheets = {ws.title: ws for ws in book.worksheets}
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+            writer.save()
+            print(f"DataFrame appended successfully to {file_path} in sheet '{sheet_name}'.")
+        
+        except Exception as e:
+            print(f"Error while appending to the workbook: {e}")
+            # Fallback: Save as a new file
+            df.to_excel(file_path, sheet_name=sheet_name, index=False, engine='openpyxl')
+            print(f"DataFrame saved successfully to new file {file_path} in sheet '{sheet_name}'.")
+    
+    else:
+        # If the workbook does not exist, create it
+        df.to_excel(file_path, sheet_name=sheet_name, index=False, engine='openpyxl')
+        print(f"DataFrame saved successfully to new file {file_path} in sheet '{sheet_name}'.")
 
-    # Save DataFrame to Excel
-    df.to_excel(file_path, sheet_name=sheet_name, index=False, engine='openpyxl')
-
-    print(f"DataFrame saved successfully to {file_path}")
 
 
 ######################## Text Preprocessing ########################
@@ -211,7 +238,7 @@ def save_to_csv(df, output_name):
     print(f"Data saved to {file_path}")
 
 
-def excel_to_csv_pipeline(xlsx_path, sheet_name, text_columns, price_column, output_csv):
+def excel_to_csv_pipeline(xlsx_path, sheet_name, text_columns, price_column, output_csv, drop_duplicates=False):
     """
     Complete processing pipeline:
       1. Load a sheet from an XLSX file.
@@ -231,8 +258,10 @@ def excel_to_csv_pipeline(xlsx_path, sheet_name, text_columns, price_column, out
     print("Data loaded from Excel.")
 
     # Step 2 & 3: Clean text columns and fix the price column
-    df_clean = clean_df(df, text_columns, price_column)
+    df_clean = clean_df(df, text_columns, price_column, drop_duplicates)
     print("Data cleaned.")
+    if drop_duplicates:
+        print("Duplicates dropped.")
 
     # Step 4: Save the cleaned DataFrame to CSV
     save_to_csv(df_clean, output_csv)
