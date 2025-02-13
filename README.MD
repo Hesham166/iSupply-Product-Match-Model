@@ -5,16 +5,15 @@ differences—to determine if two products match. The project uses a recurrent n
 to encode text at the character level, and then combines the resulting representations with a price similarity factor to produce a final matching score. The 
 project allows for a high level of flexibity and different configurations.
 
-> **_Note:_** The model architecture is inspired by [DeezyMatch: A Flexible Deep Learning Approach to Fuzzy String Matching](https://aclanthology.org/2020.emnlp-demos.9/) paper.
-
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [File Structure](#file-structure)
-3. [Module-by-Module Description](#module-by-module-description)
-4. [Setup and Usage](#setup-and-usage)
+3. [DeezyMatch Architecture](#deezymatch-architecture)
+4. [Module-by-Module Description](#module-by-module-description)
+5. [Setup and Usage](#setup-and-usage)
 
 ---
 
@@ -55,6 +54,33 @@ iSUPPLY
 └── validation_output.xlsx          # Model output on validation dataset.
 
 ```
+
+---
+## DeezyMatch Architecture
+
+> **_Note:_** The model architecture is inspired by [DeezyMatch: A Flexible Deep Learning Approach to Fuzzy String Matching](https://aclanthology.org/2020.emnlp-demos.9/) paper.
+
+
+The **DeezyMatch** model takes in two text sequences and a price difference, and it computes a matching score between 0 and 1. Here's a brief overview of its architecture:
+
+1.  **Text Encoding:**
+    
+    -   Each text sequence is first converted into embeddings using an embedding layer.
+    -   The embedded sequences are then processed by a configurable RNN (LSTM, GRU, or simple RNN) which can be bidirectional. This produces a fixed-size vector representation for each sequence.
+2.  **Combination of Text Features:**
+    
+    -   The two text representations are merged using one of several methods (concatenation, element-wise absolute difference, multiplication, or a combination of all these).
+3.  **Price Feature Processing:**
+    
+    -   The input price difference is transformed via a linear layer followed by a ReLU activation to create a price feature vector.
+4.  **Classification:**
+    
+    -   The combined text features and the price features are concatenated.
+    -   This concatenated vector is passed through a fully connected hidden layer (with ReLU activation and dropout) and then through an output layer with a sigmoid activation to yield the final matching score.
+
+Overall, the model leverages both text and numerical (price) information to determine the similarity or matching between two items which makes training the model easier. 
+
+It should be noted that the `Predictor` class uses `candidate_ranking()` function to rank candidates according to how similar candidates are to a given query using consine similarity.
 
 ---
 
@@ -151,26 +177,35 @@ iSUPPLY
 
 To make prediction from XLSX file, use `predict_from_excel()` function. For example:
 
-```python
-from src.predictor import Predictor
-p = Predictor()
+1. **Load the Predictor:** 
 
-output_df = p.predict_from_excel(
-    master_xlsx_path='./data/raw/Product Matching Dataset.xlsx',
-    test_xlsx_path='./data/preprocessed/validation_dataset.xlsx',
-    output_xlsx_path='./validation_output.xlsx',
-    master_sheet='Master File',
-    test_sheet="validation_data",
-    output_sheet_name="validation_output",
-    query_names_column='seller_item_name',
-    query_prices_column='price',
-    master_candidate_names_column='product_name_ar',
-    master_prices_column='price',
-    k=3
-)
-```
+    This loads a trained model from `checkpoints` directory.
 
-This function creates `validation_output.xlsx` file that contains the top `k` similar candidates with their `sku` and similarity score, `sim`. The function returns pandas DataFrame.
+    ```python
+    from src.predictor import Predictor
+    p = Predictor()
+    ```
+
+2. **Rank Candidate Products:**  
+
+    The `predict_from_excell()` function creates `validation_output.xlsx` file that contains the top `k` similar candidates with their `sku` and similarity score, `sim`. It returns pandas DataFrame, which could be used for further inspection (for example, droping the candidates with low similarity score).
+
+
+    ```python
+    output_df = p.predict_from_excel(
+        master_xlsx_path='./data/raw/Product Matching Dataset.xlsx',
+        test_xlsx_path='./data/preprocessed/validation_dataset.xlsx',
+        output_xlsx_path='./validation_output.xlsx',
+        master_sheet='Master File',
+        test_sheet="validation_data",
+        output_sheet_name="validation_output",
+        query_names_column='seller_item_name',
+        query_prices_column='price',
+        master_candidate_names_column='product_name_ar',
+        master_prices_column='price',
+        k=3
+    )
+    ```
 
 Or you can use the model to make manual predictions.
 
